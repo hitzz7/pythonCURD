@@ -1,0 +1,112 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Order History - NepalShop{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4"><i class="fas fa-history"></i> Order History</h2>
+    
+    {% if orders %}
+    <div class="row">
+        {% for order in orders %}
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="mb-0">Order #{{ order.order_id }}</h6>
+                            <small class="text-muted">Placed on {{ order.created_at|date:"F d, Y" }}</small>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <span class="badge 
+                                {% if order.status == 'delivered' %}bg-success
+                                {% elif order.status == 'shipped' %}bg-info
+                                {% elif order.status == 'processing' %}bg-warning
+                                {% elif order.status == 'confirmed' %}bg-primary
+                                {% elif order.status == 'cancelled' %}bg-danger
+                                {% else %}bg-secondary{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6>Items ({{ order.items.count }})</h6>
+                            {% for item in order.items.all|slice:":3" %}
+                            <div class="d-flex align-items-center mb-2">
+                                {% if item.product.image %}
+                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" 
+                                         class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                {% endif %}
+                                <div>
+                                    <small class="fw-bold">{{ item.product.name }}</small>
+                                    <br>
+                                    <small class="text-muted">Qty: {{ item.quantity }} × Rs. {{ item.price }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% if order.items.count > 3 %}
+                                <small class="text-muted">... and {{ order.items.count|add:"-3" }} more items</small>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-end">
+                                <h5 class="text-primary">Rs. {{ order.total_amount }}</h5>
+                                <p class="mb-1">
+                                    <small class="text-muted">Payment:</small>
+                                    {% if order.payment.payment_method == 'esewa' %}
+                                        <i class="fas fa-credit-card text-primary"></i> eSewa
+                                    {% else %}
+                                        <i class="fas fa-money-bill-wave text-success"></i> COD
+                                    {% endif %}
+                                </p>
+                                <p class="mb-2">
+                                    <span class="badge 
+                                        {% if order.payment_status == 'paid' %}bg-success
+                                        {% elif order.payment_status == 'pending' %}bg-warning
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ order.get_payment_status_display }}
+                                    </span>
+                                </p>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'order_success' order.order_id %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                    {% if order.status == 'pending' %}
+                                    <button class="btn btn-outline-danger btn-sm" onclick="confirmCancel('{{ order.order_id }}')">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-shopping-bag fa-5x text-muted mb-3"></i>
+        <h3>No orders yet</h3>
+        <p class="text-muted mb-4">You haven't placed any orders yet. Start shopping to see your order history here.</p>
+        <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-shopping-bag"></i> Start Shopping
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function confirmCancel(orderId) {
+    if (confirm('Are you sure you want to cancel this order?')) {
+        // In a real implementation, you would make an AJAX call to cancel the order
+        showAlert('info', 'Order cancellation request submitted. We will process your request shortly.');
+    }
+}
+</script>
+{% endblock %}

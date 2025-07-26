@@ -1,0 +1,163 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Home - NepalShop{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Welcome to NepalShop</h1>
+                <p class="lead mb-4">Discover amazing products with secure payment options including eSewa and Cash on Delivery. Shop with confidence!</p>
+                <a href="{% url 'product_list' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-shopping-bag"></i> Shop Now
+                </a>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="fas fa-store display-1"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+{% if categories %}
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Shop by Category</h2>
+        <div class="row">
+            {% for category in categories %}
+            <div class="col-md-4 col-lg-2 mb-4">
+                <a href="{% url 'product_list' %}?category={{ category.id }}" class="category-card d-block text-decoration-none">
+                    {% if category.image %}
+                        <img src="{{ category.image.url }}" alt="{{ category.name }}" class="img-fluid mb-2" style="height: 60px; width: 60px; object-fit: cover; border-radius: 50%;">
+                    {% else %}
+                        <i class="fas fa-tags fa-3x mb-2"></i>
+                    {% endif %}
+                    <h6>{{ category.name }}</h6>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Featured Products Section -->
+{% if featured_products %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h2>Featured Products</h2>
+                <p class="text-muted">Check out our most popular items</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'product_list' %}" class="btn btn-primary">
+                    View All Products <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for product in featured_products %}
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card product-card h-100">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="card-img-top product-image bg-light d-flex align-items-center justify-content-center">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">{{ product.name }}</h6>
+                        <p class="card-text text-muted small flex-grow-1">{{ product.description|truncatewords:15 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong class="text-primary">Rs. {{ product.price }}</strong>
+                            {% if product.is_in_stock %}
+                                <span class="badge bg-success">In Stock</span>
+                            {% else %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                            {% if product.is_in_stock %}
+                                <button onclick="addToCart({{ product.id }})" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            {% else %}
+                                <button class="btn btn-secondary btn-sm" disabled>
+                                    <i class="fas fa-times"></i> Out of Stock
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 mb-4">
+                <div class="p-4">
+                    <i class="fas fa-shipping-fast fa-3x text-primary mb-3"></i>
+                    <h5>Fast Delivery</h5>
+                    <p class="text-muted">Quick and reliable delivery across Nepal</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="p-4">
+                    <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                    <h5>Secure Payment</h5>
+                    <p class="text-muted">Safe transactions with eSewa and COD options</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="p-4">
+                    <i class="fas fa-headset fa-3x text-info mb-3"></i>
+                    <h5>24/7 Support</h5>
+                    <p class="text-muted">Always here to help with your questions</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="p-4">
+                    <i class="fas fa-undo fa-3x text-warning mb-3"></i>
+                    <h5>Easy Returns</h5>
+                    <p class="text-muted">Hassle-free return policy</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center">
+        <h2 class="mb-4">Ready to Start Shopping?</h2>
+        <p class="lead mb-4">Join thousands of satisfied customers who trust NepalShop for their online shopping needs.</p>
+        <a href="{% url 'product_list' %}" class="btn btn-light btn-lg me-3">
+            <i class="fas fa-shopping-bag"></i> Browse Products
+        </a>
+        {% if not user.is_authenticated %}
+        <a href="/admin/login/" class="btn btn-outline-light btn-lg">
+            <i class="fas fa-user-plus"></i> Sign Up
+        </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
