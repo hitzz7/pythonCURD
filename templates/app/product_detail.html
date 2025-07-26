@@ -1,0 +1,195 @@
+{% extends 'app/base.html' %}
+
+{% block title %}{{ product.name }} - NepalShop{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'product_list' %}?category={{ product.category.id }}">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-md-6 mb-4">
+            <div class="product-images">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid rounded shadow-sm mb-3" id="mainImage">
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center rounded shadow-sm mb-3" style="height: 400px;">
+                        <i class="fas fa-image fa-5x text-muted"></i>
+                    </div>
+                {% endif %}
+                
+                {% if product.additional_images.all %}
+                    <div class="row">
+                        {% for img in product.additional_images.all %}
+                        <div class="col-3 mb-2">
+                            <img src="{{ img.image.url }}" alt="{{ img.alt_text }}" class="img-fluid rounded thumbnail" onclick="changeMainImage('{{ img.image.url }}')">
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-md-6">
+            <h1 class="h2 mb-3">{{ product.name }}</h1>
+            
+            <div class="mb-3">
+                <span class="badge bg-secondary">{{ product.category.name }}</span>
+                {% if product.is_in_stock %}
+                    <span class="badge bg-success">In Stock</span>
+                {% else %}
+                    <span class="badge bg-danger">Out of Stock</span>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <h3 class="text-primary">Rs. {{ product.price }}</h3>
+            </div>
+
+            <div class="mb-4">
+                <h5>Description</h5>
+                <p>{{ product.description|linebreaks }}</p>
+            </div>
+
+            {% if product.is_in_stock %}
+                <div class="mb-4">
+                    <h6>Quantity</h6>
+                    <div class="input-group mb-3" style="max-width: 150px;">
+                        <button class="btn btn-outline-secondary" type="button" onclick="decreaseQuantity()">-</button>
+                        <input type="number" class="form-control text-center" id="quantity" value="1" min="1" max="{{ product.stock_quantity }}">
+                        <button class="btn btn-outline-secondary" type="button" onclick="increaseQuantity()">+</button>
+                    </div>
+                    <small class="text-muted">{{ product.stock_quantity }} items available</small>
+                </div>
+
+                <div class="d-grid gap-2 d-md-block mb-4">
+                    <button class="btn btn-primary btn-lg" onclick="addToCartWithQuantity()">
+                        <i class="fas fa-cart-plus"></i> Add to Cart
+                    </button>
+                    <a href="{% url 'product_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-arrow-left"></i> Continue Shopping
+                    </a>
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> This product is currently out of stock.
+                </div>
+                <div class="d-grid gap-2 d-md-block mb-4">
+                    <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-arrow-left"></i> Browse Other Products
+                    </a>
+                </div>
+            {% endif %}
+
+            <!-- Product Features -->
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Why Choose This Product?</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><i class="fas fa-check text-success"></i> High Quality Materials</li>
+                        <li><i class="fas fa-check text-success"></i> Fast Delivery</li>
+                        <li><i class="fas fa-check text-success"></i> Secure Payment Options</li>
+                        <li><i class="fas fa-check text-success"></i> Easy Returns</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="mt-5">
+        <h3 class="mb-4">Related Products</h3>
+        <div class="row">
+            {% for product in related_products %}
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card product-card h-100">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="card-img-top product-image bg-light d-flex align-items-center justify-content-center">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">{{ product.name }}</h6>
+                        <p class="card-text text-muted small flex-grow-1">{{ product.description|truncatewords:10 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong class="text-primary">Rs. {{ product.price }}</strong>
+                            {% if product.is_in_stock %}
+                                <span class="badge bg-success">In Stock</span>
+                            {% else %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                            {% if product.is_in_stock %}
+                                <button onclick="addToCart({{ product.id }})" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.thumbnail {
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.thumbnail:hover {
+    opacity: 0.8;
+}
+</style>
+
+<script>
+function changeMainImage(src) {
+    document.getElementById('mainImage').src = src;
+}
+
+function increaseQuantity() {
+    const quantityInput = document.getElementById('quantity');
+    const currentValue = parseInt(quantityInput.value);
+    const maxValue = parseInt(quantityInput.max);
+    
+    if (currentValue < maxValue) {
+        quantityInput.value = currentValue + 1;
+    }
+}
+
+function decreaseQuantity() {
+    const quantityInput = document.getElementById('quantity');
+    const currentValue = parseInt(quantityInput.value);
+    
+    if (currentValue > 1) {
+        quantityInput.value = currentValue - 1;
+    }
+}
+
+function addToCartWithQuantity() {
+    const quantity = parseInt(document.getElementById('quantity').value);
+    addToCart({{ product.id }}, quantity);
+}
+</script>
+{% endblock %}
